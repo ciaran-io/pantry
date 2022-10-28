@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "author": "Ciaran Toner",
+  "engines": {
+    "node": "16.18.0"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
