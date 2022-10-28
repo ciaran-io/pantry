@@ -1,11 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './src/components/**/*.{js,vue,ts}',
-    './src/layouts/**/*.vue',
-    './src/pages/**/*.vue',
-  ],
+  experimental: {
+    optimizeUniversalDefaults: true
+  },
   theme: {
-    extend: {},
+    extend: {
+      container: {
+        padding: {
+          DEFAULT: '0.5rem',
+          sm: '1rem',
+          lg: '2rem',
+        },
+      },
+    },
   },
 }

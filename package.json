@@ -12,6 +12,11 @@
     "@nuxt/image-edge": "^1.0.0-27769790.4b27db3",
     "@nuxtjs/tailwindcss": "^6.0.1",
     "nuxt": "3.0.0-rc.12",
-    "nuxt-icon": "^0.1.6"
+    "nuxt-icon": "^0.1.6",
+    "eslint": "^8.26.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-vue": "^9.6.0",
+    "prettier": "^2.7.1",
+    "prettier-plugin-tailwindcss": "^0.1.13"
   }
 }

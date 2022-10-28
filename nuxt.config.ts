@@ -1,4 +1,5 @@
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
+import { fileURLToPath } from 'url'
+// eslint-disable-next-line no-undef
 export default defineNuxtConfig({
   typescript: { shim: false },
   // Src directory
@@ -14,4 +15,9 @@ export default defineNuxtConfig({
     exposeConfig: false,
     viewer: false,
   },
+
+  // Directory aliases
+  alias: {
+    'images': fileURLToPath(new URL('/assets/images', import.meta.url))
+  }
 })

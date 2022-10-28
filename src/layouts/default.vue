@@ -1,10 +1,7 @@
-<script lang="ts" setup></script>
-
 <template>
   <div>
-    Layout: default
+    <TheHeader/>
     <slot />
+    <LazyTheFooter/>
   </div>
 </template>
-
-<style scoped></style>
