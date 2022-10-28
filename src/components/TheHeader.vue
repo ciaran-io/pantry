@@ -67,7 +67,7 @@
               class="plate absolute -left-12 w-11/12 md:-left-20 md:top-1/4 md:bottom-10 md:h-3/4 md:w-full"
             >
               <img
-                src="~images/subject.png"
+                src="/assets/images/subject.png"
                 alt=""
                 class="relative md:w-full rounded-full border-8 border-white p-2"
                 height="225"
@@ -82,7 +82,7 @@
     <div class="hidden lg:mt-14 lg:block lg:w-80">
       <img
         class="h-[565px] w-auto rounded-tr-3xl rounded-br-3xl object-cover"
-        src="~images/ingredients.jpg"
+        src="/assets/images/ingredients.jpg"
         alt=""
         height="1000"
         width="405"
