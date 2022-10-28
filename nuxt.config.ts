@@ -2,6 +2,11 @@ import { fileURLToPath } from 'url'
 // eslint-disable-next-line no-undef
 export default defineNuxtConfig({
   typescript: { shim: false },
+
+  runtimeConfig: {
+    apiSpoonKey: process.env.SPOONACULAR_API_KEY
+  },
+
   // Src directory
   srcDir: 'src/',
 
@@ -20,4 +25,5 @@ export default defineNuxtConfig({
   alias: {
     'images': fileURLToPath(new URL('/assets/images', import.meta.url))
   }
+
 })

@@ -1,5 +1,7 @@
 <script setup>
-  const api = '&apiKey=e98d526766314eb6abf19253443c7b7b'
+  const config = useRuntimeConfig()
+  const apiKey = config.apiSpoonKey
+
   const url =
     'https://api.spoonacular.com/recipes/complexSearch?cuisine=european&type='
   const recipesToReturn = 4
@@ -14,7 +16,11 @@
 
   const recipeUrl = ref(dessertEndpoint)
 
-  const { data: recipes } = await useFetch(`${url}${recipeUrl.value}${api}`)
+  const {
+    data: recipes,
+    pending,
+    error,
+  } = await useLazyFetch(`${url}${recipeUrl.value}&apiKey=${apiKey}`)
 
   const foodCategories = [
     {
@@ -85,7 +91,7 @@
     return string.length > 190 ? string.substring(0, 190) + '...' : string
   }
 
-  console.log(recipes.value)
+  watch(() => recipes.value)
 </script>
 
 <template>
@@ -95,7 +101,11 @@
     <h2 class="text-3xl">Recipes</h2>
 
     <!-- Recipe container -->
-    <section class="grid gap-x-10 md:grid-cols-[max-content_2fr_1fr]">
+    <div v-if="pending || error">Loading...</div>
+    <section
+      v-else
+      class="grid gap-x-10 md:grid-cols-[max-content_2fr_1fr]"
+    >
       <!-- Categories -->
       <div class="mr-12 overflow-x-scroll pb-4 lg:overflow-visible">
         <ul

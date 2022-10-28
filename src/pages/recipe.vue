@@ -3,51 +3,33 @@
     layout: 'recipe',
   })
   const route = useRoute()
-  // const { recipeId } = route.query
-  const recipeId = 715569
+  const { id } = route.query
+  const config = useRuntimeConfig()
+  const apiKey = config.apiSpoonKey
 
-  const api = '&apiKey=e98d526766314eb6abf19253443c7b7b'
-  const apiTwo = '&apiKey=91b296d865fc467286e8747fb13a808f'
-  const recipeEndpoint = `https://api.spoonacular.com/recipes/${recipeId}/information?includeNutrition=true`
-
-  // const {
-  //   data: recipe,
-  //   pending,
-  //   error,
-  // } = await useLazyFetch(`${recipeEndpoint}${api}`)
+  const recipeEndpoint = `https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${apiKey}`
   const {
     data: recipe,
     pending,
     error,
-  } = await useFetch(`${recipeEndpoint}${apiTwo}`)
+  } = await useLazyFetch(`${recipeEndpoint}`)
 
   const recipeCoreNutrients = ref()
-  const sam = ref()
 
-  const { nutrients } = recipe.value.nutrition
   const keyNutrients = ['Calories', 'Protein', 'Carbohydrates', 'Fat']
 
-  recipeCoreNutrients.value = nutrients.filter((nutrients) => {
-    let index = 0
-    for (index; index < keyNutrients.length; index++) {
-      if (nutrients.name === keyNutrients[index]) return nutrients.name
+  watch(
+    () => recipe.value,
+    () => {
+      const { nutrients } = recipe.value.nutrition
+      recipeCoreNutrients.value = nutrients.filter((nutrients) => {
+        let index = 0
+        for (index; index < keyNutrients.length; index++) {
+          if (nutrients.name === keyNutrients[index]) return nutrients.name
+        }
+      })
     }
-  })
-
-  console.log(recipe.value)
-  // watch(
-  //   () => recipe.value,
-  //   () => {
-  //     // nutrients.name === 'Calories' ||
-  //     // nutrients.name === 'Protein' ||
-  //     // nutrients.name === 'Carbohydrates' ||
-  //     // nutrients.name === 'Fat' ||
-  //     // nutrients.name === 'Fiber'
-
-  //     console.log(recipe.value)
-  //     // console.log(recipe.value, recipeCoreNutrients)
-  //   }
-  // )
+  )
 </script>
 
 <template>
@@ -69,10 +51,9 @@
           <h3 class="text-3xl">Ingredients</h3>
           <ul class="space-y-4">
             <li
+              v-for="{ name, image, measures } in recipe.extendedIngredients"
+              :key="name"
               class="flex items-center gap-x-6"
-              v-for="(
-                { name, image, measures }, index
-              ) in recipe.extendedIngredients"
             >
               <img
                 class="h-12 w-12 rounded-full object-cover"
@@ -94,13 +75,13 @@
           <div>
             <div class="space-x-2">
               <span
-              v-if="!recipe.vegan"
+                v-if="!recipe.vegan"
                 class="rounded-full border px-4 py-1 text-sm"
                 >Vegan</span
               >
               <span
-              v-if="recipe.vegetarian"
-              class="rounded-full border px-4 py-1 text-sm"
+                v-if="recipe.vegetarian"
+                class="rounded-full border px-4 py-1 text-sm"
                 >Vegetarian</span
               >
             </div>
@@ -110,7 +91,8 @@
           <p>Nutrition per serving</p>
           <ul class="grid grid-flow-col">
             <li
-            v-for="{ name, amount } in recipeCoreNutrients"
+              v-for="{ name, amount } in recipeCoreNutrients"
+              :key="name"
               class="grid"
             >
               <span v-if="name === 'Carbohydrates'"
@@ -127,8 +109,8 @@
           <!-- Recipe instructions -->
           <ol class="space-y-6">
             <li
-              class="grid grid-cols-[min-content_1fr] items-center gap-x-3"
               v-for="({ step }, index) in recipe.analyzedInstructions[0].steps"
+              class="grid grid-cols-[min-content_1fr] items-center gap-x-3"
             >
               <div
                 class="grid h-8 w-8 place-items-center rounded-full bg-slate-700"

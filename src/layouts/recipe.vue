@@ -2,7 +2,7 @@
   const navLinks = [
     {
       label: 'Home',
-      url: '',
+      url: '/',
     },
     {
       label: 'About',
