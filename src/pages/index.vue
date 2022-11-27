@@ -1,237 +1,218 @@
 <script setup>
-  const config = useRuntimeConfig()
-  const apiKey = config.apiSpoonKey
+  // FIXME: Check local storage before calling API
 
-  const url =
-    'https://api.spoonacular.com/recipes/complexSearch?cuisine=european&type='
-  const recipesToReturn = 4
-
-  const vegetarianEndpoint = `main%20course&diet=Vegetarian&addRecipeInformation=true&number=${recipesToReturn}`
-  const dessertEndpoint = `dessert&addRecipeInformation=true&number=${recipesToReturn}`
-  const glutenFreeEndpoint = `main%20course&diet=Gluten%20Free&addRecipeInformation=true&number=${recipesToReturn}`
-  const paleoEndpoint = `main%20course&diet=Paleo&addRecipeInformation=true&number=${recipesToReturn}`
-  const lowCarbsEndpoint = `main%20course&addRecipeInformation=true&number=${recipesToReturn}&maxCarbs=10`
-  const trendingEndpoint = `main%20course&diet=Whole30&addRecipeInformation=true&number=${recipesToReturn}`
-  const randomEndpoint = `main%20course|snack|appetizer&addRecipeInformation=true&number=${recipesToReturn}&sort=random`
-
-  const recipeUrl = ref(dessertEndpoint)
-
-  const {
-    data: recipes,
-    pending,
-    error,
-  } = await useLazyFetch(`${url}${recipeUrl.value}&apiKey=${apiKey}`)
-
+  // User favorites
+  const favorites = userFavorites()
+  const vegetarianEndpoint = 'main%20course&diet=vegetarian'
+  const dessertEndpoint = 'dessert'
+  const glutenFreeEndpoint = 'main%20course&diet=gluten%20free'
+  const paleoEndpoint = 'main%20course&diet=primal'
+  const lowCarbsEndpoint = 'main%20course&maxCarbs=10'
+  const trendingEndpoint = 'main%20course&diet=ketogenic'
+  const randomEndpoint =
+    'random?number=4&tags=main%20course,Side%20Dish&offset=30'
   const foodCategories = [
     {
       label: 'vegetarian',
       icon: 'fluent:bowl-salad-20-filled',
-      url: `${vegetarianEndpoint}`,
+      endpoint: vegetarianEndpoint,
     },
     {
-      label: 'gluten free',
+      label: 'gluten-free',
       icon: 'fa6-solid:wheat-awn',
-      url: `${glutenFreeEndpoint}`,
+      endpoint: glutenFreeEndpoint,
     },
     {
-      label: 'paleo',
+      label: 'primal',
       icon: 'game-icons:caveman',
-      url: `${paleoEndpoint}`,
+      endpoint: paleoEndpoint,
     },
     {
-      label: 'low carb',
+      label: 'low-carb',
       icon: 'emojione-monotone:croissant',
-      url: `${lowCarbsEndpoint}`,
+      endpoint: lowCarbsEndpoint,
     },
     {
       label: 'desserts',
       icon: 'file-icons:cakefile',
-      url: `${dessertEndpoint}`,
+      endpoint: dessertEndpoint,
     },
     {
       label: 'trending',
       icon: 'ant-design:fire-filled',
-      url: `${trendingEndpoint}`,
+      endpoint: trendingEndpoint,
     },
     {
       label: 'random',
       icon: 'fa-solid:random',
-      url: `${randomEndpoint}`,
+      endpoint: randomEndpoint,
     },
   ]
-  // console.log(recipes.value)
-  /**
-   * Return cooking time in format (h m).
-   * Example: 1h 30m
-   * @constructor
-   * @param {number} time - cookingTime received from API
-   */
-  function cookingTime(time) {
-    if (!time) return 'No cooking time available'
-    // Return hours in time
-    const hours = Math.floor(time / 60)
-    // Return minutes in time
-    const minutes = Math.round((time / 60 - hours) * 60)
+  const localStorageLabel = ref(foodCategories[0].label)
+  const foodCategory = ref(foodCategories[0].endpoint)
+  const isLoading = ref(false)
+  const recipeCardContainer = ref(null)
+  const updatingToast = ref(false)
+  const recipeAdded = ref(true)
 
-    if (hours > 0 && minutes > 0) {
-      return `${hours}h ${minutes}m`
-    } else if (hours > 0 && minutes < 1) {
-      return `${hours}h`
-    } else {
-      return `${minutes}m`
+  const {
+    error,
+    pending,
+    data: recipes,
+  } = useLazyAsyncData('recipes', () =>
+    $fetch('/api/recipesComplex', { query: { foodQuery: foodCategory.value } })
+  )
+  const refresh = () => refreshNuxtData('recipes')
+
+  // Set sizes (width, height) for loading cards
+  function setLoadingCardSizes() {
+    const [...recipeCards] = [
+      recipeCardContainer.value.children[1].lastElementChild,
+      recipeCardContainer.value.children[2].children,
+    ]
+
+    recipeCards[0].style.width = `${recipeCards[0].offsetWidth}px`
+    recipeCards[0].style.height = `${recipeCards[0].offsetHeight}px`
+
+    for (let card of recipeCards[1]) {
+      card.lastElementChild.style.width = `${card.offsetWidth}px`
+      card.lastElementChild.style.height = `${card.offsetHeight}px`
     }
   }
 
-  function updateRecipeUrl(recipeValue) {
-    console.log(recipeValue)
+  async function checkLocalStorage() {
+    let recipe = localStorage.getItem(`recipe:${localStorageLabel.value}`)
+
+    if (recipe) {
+      recipe = JSON.parse(recipe)
+      recipes.value = recipe
+      setTimeout(() => {
+        isLoading.value = false
+      }, 500)
+    } else {
+      await refresh()
+      localStorage.setItem(
+        `recipe:${localStorageLabel.value}`,
+        JSON.stringify(recipes.value)
+      )
+      isLoading.value = false
+    }
   }
 
-  function truncateString(string) {
-    if (!string) return 'No summary available'
-    return string.length > 190 ? string.substring(0, 190) + '...' : string
+  function changeEndpoint(endpoint, label) {
+    setLoadingCardSizes()
+    isLoading.value = true
+
+    foodCategory.value = endpoint
+    localStorageLabel.value = label
+
+    checkLocalStorage()
   }
 
-  watch(() => recipes.value)
+  function call(data) {
+    favorites.value.has(data)
+      ? (favorites.value.delete(data), (recipeAdded.value = false))
+      : (favorites.value.add(data), (recipeAdded.value = true))
+
+    updatingToast.value = true
+
+    setTimeout(() => {
+      updatingToast.value = false
+    }, 2500)
+  }
+
+  const checkRecipeIsFavorite = (id) => favorites.value.has(id)
 </script>
 
 <template>
-  <div
-    class="container mx-auto mt-64 space-y-8 rounded-lg bg-neutral-200 p-4 shadow"
-  >
-    <h2 class="text-3xl">Recipes</h2>
+  <main class="container mt-64">
+    <!-- Toast -->
+    <transition name="slide-fade">
+      <recipe-toast
+        v-show="updatingToast"
+        :recipe-added="recipeAdded"
+      />
+    </transition>
 
-    <!-- Recipe container -->
-    <div v-if="pending || error">Loading...</div>
     <section
-      v-else
-      class="grid gap-x-10 md:grid-cols-[max-content_2fr_1fr]"
+      class="container space-y-8 rounded-lg bg-neutral-300 p-4 shadow lg:min-h-[590px] lg:max-w-screen-xl"
     >
-      <!-- Categories -->
-      <div class="mr-12 overflow-x-scroll pb-4 lg:overflow-visible">
-        <ul
-          class="grid grid-flow-col space-x-4 rounded-md bg-neutral-200 p-4 shadow lg:block lg:w-[calc(100%_+_50px)] lg:space-x-0 lg:space-y-3"
-        >
-          <li
-            v-for="(value, key) in foodCategories"
-            :key="key"
-            class="min-w-max"
-          >
-            <button class="flex h-full w-full items-center gap-x-3 py-1 px-2">
-              <Icon
-                class="h-8 w-8 rounded-full bg-white p-1.5 text-neutral-600"
-                :name="value.icon"
-              />
-              <span class="inline-block text-sm font-medium">{{
-                value.label
-              }}</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-      <!-- Main recipe card -->
-      <div class="h-fit rounded-xl bg-neutral-400 shadow-lg">
-        <div class="grid grid-cols-[max-content_1fr] gap-x-6 p-4">
-          <div>
-            <img
-              class="rounded-xl object-cover"
-              :src="recipes.results[0].image"
-              alt=""
-              width="200"
-              height="200"
+      <h2 class="text-3xl">Recipes</h2>
+      <!-- Recipe container -->
+      <div
+        ref="recipeCardContainer"
+        class="grid gap-y-8 gap-x-6 overflow-clip lg:md:grid-cols-[1fr_2fr_1fr]"
+      >
+        <!-- Categories -->
+        <recipe-category-list
+          :food-categories="foodCategories"
+          :food-category="foodCategory"
+          @change-endpoint="changeEndpoint"
+        />
+        <!-- Recipe placeholder card -->
+        <template v-if="error || pending">
+          <recipe-card-animation class="min-h-[235px]" />
+        </template>
+        <!-- Main recipe card -->
+        <template v-else>
+          <recipe-card
+            :id="recipes.results[0].id"
+            :title="recipes.results[0].title"
+            :recipe-summary="recipes.results[0].summary"
+            :ready-in-minutes="recipes.results[0].readyInMinutes"
+            :servings="recipes.results[0].servings"
+            :image="recipes.results[0].image"
+            :image-width="235"
+            :image-height="200"
+            :is-loading="isLoading"
+            class="sm:grid sm:grid-cols-[210px,1fr] sm:gap-y-2 lg:gap-x-8 lg:[&_h2]:text-2xl"
+            :user-favorites="checkRecipeIsFavorite(recipes.results[0].id)"
+            @update-favorites="call"
+          />
+          <!-- Additional recipe card -->
+          <div class="space-y-4">
+            <recipe-card
+              v-for="{
+                title,
+                image,
+                readyInMinutes,
+                servings,
+                id,
+              } in recipes.results
+                ? recipes.results.slice(1, 4)
+                : recipes.results"
+              :id="id"
+              :key="title"
+              :title="title"
+              :ready-in-minutes="readyInMinutes"
+              :servings="servings"
+              :image="image"
+              :image-width="95"
+              :image-height="95"
+              :is-loading="isLoading"
+              class="sm:grid sm:grid-cols-[210px,1fr] sm:gap-y-2 lg:block lg:[&_h2]:text-xl"
+              :user-favorites="checkRecipeIsFavorite(id)"
+              @update-favorites="call"
             />
           </div>
-          <!--  -->
-          <div class="space-y-4">
-            <h2 class="text-2xl font-medium text-white">
-              {{ recipes.results[0].title }}
-            </h2>
-
-            <div class="space-y-4">
-              <p
-                class="font-semibold"
-                v-html="truncateString(recipes.results[0].summary)"
-              ></p>
-              <nuxt-link
-                class="block rounded-full border px-4 py-1 text-center"
-                :to="{
-                  path: '/recipe',
-                  query: { id: recipes.results[0].id },
-                }"
-              >
-                View recipe
-              </nuxt-link>
-            </div>
-
-            <div class="flex justify-between text-sm">
-              <!-- Cooking time -->
-              <div class="">
-                <span class="block text-gray-400">Cook Time</span>
-                <span class="block font-bold">{{
-                  cookingTime(recipes.results[0].readyInMinutes)
-                }}</span>
-              </div>
-              <div>
-                <span class="block text-gray-500">Serving</span>
-                <span class="block font-bold">
-                  <Icon name="fluent:people-48-filled" />
-                  {{ recipes.results[0].servings }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Additional recipe card -->
-      <div class="space-y-4">
-        <div
-          v-for="{
-            title,
-            image,
-            readyInMinutes,
-            servings,
-            id,
-          } in recipes.results"
-          :key="title"
-          class="relative grid grid-cols-[100px,1fr] gap-x-4 rounded-xl bg-neutral-500 p-3 text-white shadow-xl"
-        >
-          <img
-            class="h-20 w-20 rounded-xl object-cover object-center"
-            :src="image"
-            alt=""
-            width="96"
-            height="96"
-          />
-          <div class="col-start-2 space-y-4">
-            <h2 class="text-sm font-medium">{{ title }}</h2>
-
-            <div class="flex justify-between text-sm">
-              <!-- Cooking time -->
-              <div class="">
-                <span class="block text-gray-300">Cook Time</span>
-                <span class="block">{{ cookingTime(readyInMinutes) }}</span>
-              </div>
-
-              <div>
-                <span class="block text-gray-300">Serving</span>
-                <span class="">
-                  <Icon name="fluent:people-48-filled" /> {{ servings }}
-                </span>
-              </div>
-            </div>
-            <div>
-              <nuxt-link
-                class="block rounded-full border px-4 py-1 text-center text-sm"
-                :to="{
-                  path: '/recipe',
-                  query: { id: id },
-                }"
-              >
-                View recipe
-              </nuxt-link>
-            </div>
-          </div>
-        </div>
+        </template>
       </div>
     </section>
-  </div>
+  </main>
 </template>
+
+<style>
+  .slide-fade-enter-active {
+    transition: all 0.3s ease-in 0.5s;
+  }
+
+  .slide-fade-leave-active {
+    transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+  }
+
+  .slide-fade-enter-from,
+  .slide-fade-leave-to {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+</style>
