@@ -1,10 +1,13 @@
-import { fileURLToPath } from 'url'
+
 // eslint-disable-next-line no-undef
 export default defineNuxtConfig({
   typescript: { shim: false },
 
   runtimeConfig: {
-    apiSpoonKey: process.env.SPOONACULAR_API_KEY
+    apiSpoonKey: process.env.SPOONACULAR_API_KEY,
+    public: {
+      apiURL: 'https://api.spoonacular.com/recipes'
+    }
   },
 
   // Src directory
@@ -21,9 +24,5 @@ export default defineNuxtConfig({
     viewer: false,
   },
 
-  // Directory aliases
-  alias: {
-    'images': fileURLToPath(new URL('/assets/images', import.meta.url))
-  }
 
 })
