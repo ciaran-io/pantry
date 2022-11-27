@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "author": "Ciaran Toner",
   "engines": {
-    "node": "16.18.0"
+    "node": "18.12.1"
   },
   "scripts": {
     "build": "nuxt build",
@@ -14,12 +14,12 @@
   },
   "devDependencies": {
     "@nuxt/image-edge": "^1.0.0-27769790.4b27db3",
-    "@nuxtjs/tailwindcss": "^6.0.1",
-    "nuxt": "3.0.0-rc.12",
-    "nuxt-icon": "^0.1.6",
+    "@nuxtjs/tailwindcss": "^6.1.3",
     "eslint": "^8.26.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-vue": "^9.6.0",
+    "nuxt": "^3.0.0",
+    "nuxt-icon": "^0.1.6",
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13"
   }
