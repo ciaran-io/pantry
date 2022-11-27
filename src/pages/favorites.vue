@@ -33,10 +33,10 @@
       />
       <h1 class="text-center text-3xl">No favorites yet</h1>
     </div>
-    
+
     <!-- Load placeholder card on error / pending -->
-    <template v-else>
-      <div v-if="error || pending">
+    <template v-else-if="error || pending">
+      <div>
         <RecipeCardAnimation class="min-h-[235px]" />
       </div>
     </template>
