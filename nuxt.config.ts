@@ -1,4 +1,3 @@
-
 // eslint-disable-next-line no-undef
 export default defineNuxtConfig({
   typescript: { shim: false },
@@ -6,8 +5,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiSpoonKey: process.env.SPOONACULAR_API_KEY,
     public: {
-      apiURL: 'https://api.spoonacular.com/recipes'
-    }
+      apiURL: 'https://api.spoonacular.com/recipes',
+    },
   },
 
   // Src directory
@@ -23,6 +22,17 @@ export default defineNuxtConfig({
     exposeConfig: false,
     viewer: false,
   },
-
-
+  app: {
+    head: {
+      titleTemplate: 'Pantry | All your recipes in one place',
+      htmlAttrs: {
+        lang: 'en',
+      },
+      meta: [
+        { name: 'author', content: 'Ciaran Toner' },
+        { name: 'keywords', content: 'food recipes, recipes' },
+        { name: 'description', content: 'A curated list of fantastic recipes' },
+      ],
+    },
+  },
 })
