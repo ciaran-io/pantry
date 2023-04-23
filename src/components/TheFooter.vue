@@ -16,6 +16,7 @@
           v-for="(value, key) in socialLinks"
           :key="key"
           :to="`https://${key}.com`"
+          target="_blank"
         >
           <Icon
             class="h-8 w-8"
